@@ -116,7 +116,40 @@ def register():
     
     else:
         return render_template("register.html")
+    
+@app.route("/")
+@login_required
+def index():
+    return "<h1>Welcome to Finance App!</h1><p>Go to /quote to check stock prices</p>"
+
+
+@app.route("/quote", methods=["GET", "POST"])
+@login_required
+def quote():
+    
+    if request.method == "POST":
+        symbol = request.form.get("symbol")
+        quote = lookup(symbol)
+
+        if not quote:
+            return apology("Please enter a valid quote", 403)
+
+        quote_name = quote["name"]
+        quote_price = quote["price"]
+        quote_symbol = quote["symbol"]
+
+        return render_template("quote_data.html", quote_name=quote_name, quote_price=quote_price, quote_symbol=quote_symbol)
+    
+    else:
+        return render_template("quote.html")
+
         
+
+
+    
+
+    
         
-        
+
+
 

@@ -1,0 +1,20 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Quote Result
+{% endblock %}
+
+{% block main %}
+<div class="card mx-auto" style="max-width: 400px;">
+    <div class="card-body text-center">
+        <h3 class="card-title mb-3">{{ quote_name }}</h3>
+        <p class="card-text">
+            <strong>Symbol:</strong> {{ quote_symbol }}<br>
+            <strong>Price:</strong> {{ quote_price | usd }}
+        </p>
+        <a href="/quote" class="btn btn-primary mt-3">Check Another Quote</a>
+    </div>
+</div>
+{% endblock %}
+
+
