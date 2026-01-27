@@ -40,7 +40,7 @@ def login():
         if not username:
             return apology("Must provide username", 403)
         
-        #valide password
+        #Valide password
         password = request.form.get("password")
         if not password:
             return apology("Must enter password", 403)
@@ -71,4 +71,52 @@ def login():
         return render_template("login.html")
     
 
+@app.route("/register", methods=["GET", "POST"])
+def register():
+
+    session.clear()
+
+    if request.method == "POST":
+        #Validate username
+        username = request.form.get("username")
+        if not username:
+            return apology("Must provide username", 403)
+        
+        #Valide password
+        password = request.form.get("password")
+        if not password:
+            return apology("Must enter password", 403)
+        
+        #Valide confirm_password
+        confirm_password = request.form.get("confirm_password")
+        if not confirm_password:
+            return apology("Must confirm password", 403)
+        
+        if password != confirm_password:
+            return apology("Wrong password confirmation", 403)
+
+        conn = get_db()
+        db = conn.cursor()
+
+        #encrypting password
+        hash_pw = generate_password_hash(password)
+
+        #Register the user
+        try:
+            db.execute("INSERT INTO users (username, hash) VALUES (?, ?)", (username, hash_pw))
+            user_id = db.lastrowid
+            session["user_id"] = user_id
+            conn.commit()
+            conn.close()
+        except sqlite3.IntegrityError:
+            conn.close()
+            return apology("Username already taken", 403)
+        
+        return redirect("/")
+    
+    else:
+        return render_template("register.html")
+        
+        
+        
 
