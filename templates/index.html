@@ -1,0 +1,41 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Portfolio
+{% endblock %}
+
+{% block main %}
+    <h2 class="mb-4">Your Portfolio</h2>
+
+    <table class="table table-striped table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Symbol</th>
+                <th>Shares</th>
+                <th>Price</th>
+                <th>Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for quote in portfolio %}
+            <tr>
+                <td>{{ quote.symbol }}</td>
+                <td>{{ quote.shares }}</td>
+                <td>{{ quote.price | usd }}</td>
+                <td>{{ quote.total | usd }}</td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3"><strong>Cash</strong></td>
+                <td>{{ cash | usd }}</td>
+            </tr>
+            <tr>
+                <td colspan="3"><strong>Grand Total</strong></td>
+                <td>{{ grand_total | usd }}</td>
+            </tr>
+        </tfoot>
+    </table>
+{% endblock %}

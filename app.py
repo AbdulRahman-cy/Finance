@@ -120,8 +120,46 @@ def register():
 @app.route("/")
 @login_required
 def index():
-    return "<h1>Welcome to Finance App!</h1><p>Go to /quote to check stock prices</p>"
+    conn = get_db()
+    db = conn.cursor()
 
+    db.execute("SELECT cash FROM users WHERE id = ?", (session["user_id"],))
+    cash = db.fetchone()["cash"]
+
+    db.execute("""
+        SELECT symbol, SUM( CASE WHEN type = 'BUY' THEN shares ELSE -shares END) AS shares
+        FROM transactions
+        WHERE user_id = ?
+        GROUP BY symbol
+        HAVING shares > 0
+                """, (session["user_id"],))
+
+    rows = db.fetchall()
+    conn.close()
+
+    portfolio = []
+    total_stock_value = 0
+
+    for row in rows:
+        quote = lookup(row["symbol"])
+        total = row["shares"] * quote["price"]
+        total_stock_value += total
+        
+        portfolio.append({
+            "symbol": row["symbol"],
+            "shares": row["shares"],
+            "price": quote["price"],
+            "total": total
+        })
+
+    grand_total = cash + total_stock_value
+
+    return render_template(
+        "index.html",
+        portfolio=portfolio,
+        cash=cash,
+        grand_total=grand_total
+    )
 
 @app.route("/quote", methods=["GET", "POST"])
 @login_required
@@ -175,7 +213,7 @@ def buy():
 
         db.execute("SELECT cash FROM users WHERE id = ?", (session["user_id"],))
         row = db.fetchone()
-        available_cash = row[0]
+        available_cash = row["cash"]
 
         if total_price > available_cash:
             conn.close()
@@ -193,6 +231,8 @@ def buy():
     
     else:
         return render_template("buy.html")
+    
+
 
 
         
