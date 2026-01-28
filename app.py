@@ -341,6 +341,10 @@ def history():
 
     return render_template("history.html", history=history)
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect("/")
     
 
 
