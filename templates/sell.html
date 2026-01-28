@@ -1,0 +1,67 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Sell
+{% endblock %}
+
+{% block main %}
+    <h1>Sell Shares</h1>
+
+    <form action="/sell" method="post">
+
+        <div class="mb-3">
+            <input type="hidden" name="symbol" id="symbolInput" required>
+
+            <div class="dropdown">
+                <button
+                    class="btn btn-outline-secondary dropdown-toggle w-100 text-start shadow-sm"
+                    type="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    id="symbolDropdown"
+                >
+                    Select symbol
+                </button>
+
+                <ul class="dropdown-menu w-100">
+                    {% for symbol in symbols %}
+                        <li>
+                            <a
+                                class="dropdown-item"
+                                href="#"
+                                onclick="selectSymbol('{{ symbol }}')"
+                            >
+                                {{ symbol }}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+
+
+        <div class="mb-3">
+            <input
+                type="number"
+                name="num_of_quotes"
+                class="form-control"
+                placeholder="Number of shares"
+                min="1"
+                required
+            >
+        </div>
+
+        <button class="btn btn-danger" type="submit">
+            Sell
+        </button>
+
+    </form>
+    <script>
+        function selectSymbol(symbol) {
+            document.getElementById("symbolDropdown").innerText = symbol;
+            document.getElementById("symbolInput").value = symbol;
+        }
+    </script>
+
+{% endblock %}

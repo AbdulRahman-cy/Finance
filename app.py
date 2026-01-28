@@ -232,6 +232,91 @@ def buy():
     else:
         return render_template("buy.html")
     
+@app.route("/sell", methods = ["POST", "GET"])
+@login_required
+def sell():
+
+    if request.method == "POST":
+        quote_symbol = request.form.get("symbol")
+        if not quote_symbol:
+            return apology("Must select quote", 403)
+        
+        quote = lookup(quote_symbol)
+        if not quote:
+            return apology("Invalid symbol", 403)
+        
+        quote_price = quote["price"]
+
+        try:
+            num_of_quotes = int(request.form.get("num_of_quotes"))
+        except:
+            return apology("Not enough shares", 403)
+
+        if num_of_quotes < 1:
+            return apology("Must enter valid number of quotes", 403)
+        
+        total_price = num_of_quotes * quote_price
+        
+        conn = get_db()
+        db = conn.cursor()
+
+        db.execute("""
+            SELECT SUM(
+                CASE
+                    WHEN type = 'BUY' THEN shares
+                    ELSE -shares
+                END
+            ) AS shares
+            FROM transactions
+            WHERE user_id = ? AND symbol = ?
+        """, (session["user_id"], quote_symbol))
+
+        row = db.fetchone()
+        owned_shares = row["shares"]
+
+        if not owned_shares or owned_shares < num_of_quotes:
+            conn.close()
+            return apology("Not enough shares", 403)
+
+        #update cash
+        #update transactions
+
+        db.execute("UPDATE users SET cash = cash + ? WHERE id = ?", (total_price, session["user_id"]))
+
+        db.execute("""
+                   INSERT into transactions 
+                   (user_id, symbol, shares, price, type) 
+                   VALUES (?, ?, ?, ?, ?)
+                   """, (session["user_id"], quote_symbol, num_of_quotes, quote_price, 'SELL'))
+        conn.commit()
+        conn.close()
+
+        return redirect("/")
+    
+    else:
+        conn = get_db()
+        db = conn.cursor()
+
+        db.execute("""
+            SELECT symbol
+            FROM transactions
+            WHERE user_id = ?
+            GROUP BY symbol
+            HAVING SUM(CASE WHEN type = 'BUY' THEN shares ELSE -shares END) > 0
+        """, (session["user_id"],))
+
+        symbols = []
+
+        rows = db.fetchall()
+        for row in rows:
+            symbols.append(row["symbol"])
+        
+        conn.close()
+
+        return render_template("sell.html", symbols=symbols)
+
+        
+
 
 
 
