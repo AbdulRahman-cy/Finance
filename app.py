@@ -126,6 +126,7 @@ def index():
     db.execute("SELECT cash FROM users WHERE id = ?", (session["user_id"],))
     cash = db.fetchone()["cash"]
 
+    #Quering number of shares
     db.execute("""
         SELECT symbol, SUM( CASE WHEN type = 'BUY' THEN shares ELSE -shares END) AS shares
         FROM transactions
@@ -314,6 +315,35 @@ def sell():
         conn.close()
 
         return render_template("sell.html", symbols=symbols)
+
+@app.route("/history")
+@login_required
+def history():
+    
+    conn = get_db()
+    db = conn.cursor()
+
+    db.execute("SELECT * from transactions WHERE user_id = ?", (session["user_id"],))
+    transactions = db.fetchall()
+    conn.close()
+
+    history = []
+
+    for t in transactions:
+        history.append({
+            "symbol": t["symbol"],
+            "shares": t["shares"],
+            "price": t["price"],
+            "type": t["type"],
+            "timestamp": t["timestamp"],
+            "total": t["shares"] * t["price"]
+        })
+
+    return render_template("history.html", history=history)
+
+    
+
+
 
         
 
