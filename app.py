@@ -142,6 +142,63 @@ def quote():
     
     else:
         return render_template("quote.html")
+    
+@app.route("/buy", methods=["GET", "POST"])
+@login_required
+def buy():
+
+    if request.method == "POST":
+        quote_symbol = request.form.get("symbol")
+        if not quote_symbol:
+            return apology("Must select quote", 403)
+        
+        quote = lookup(quote_symbol)
+        if not quote:
+            return apology("Invalid symbol", 403)
+        
+        quote_price = quote["price"]
+
+        #Casting number of quotes to int
+        #try except here to avoid ValueError
+        try:
+            num_of_quotes = int(request.form.get("num_of_quotes"))
+        except:
+            return apology("Invalid number of shares", 403)
+
+        if num_of_quotes < 1:
+            return apology("Must enter valid number of quotes", 403)
+        
+        total_price = num_of_quotes * quote_price
+
+        conn = get_db()
+        db = conn.cursor()
+
+        db.execute("SELECT cash FROM users WHERE id = ?", (session["user_id"],))
+        row = db.fetchone()
+        available_cash = row[0]
+
+        if total_price > available_cash:
+            conn.close()
+            return apology("No available cash")
+        
+        db.execute("UPDATE users SET cash = cash - ? WHERE id = ?", (total_price, session["user_id"]))
+
+        db.execute("INSERT into transactions (user_id, symbol, shares, price, type)"
+                   "VALUES (?, ?, ?, ?, ?)", 
+                   (session["user_id"], quote_symbol, num_of_quotes, quote_price, 'BUY'))
+        conn.commit()
+        conn.close()
+        
+        return redirect("/")
+    
+    else:
+        return render_template("buy.html")
+
+
+        
+
+
+
 
         
 
